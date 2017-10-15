@@ -1,0 +1,63 @@
+---
+title: "Lab Exercise 1 - Problem 3"
+author: "Spencer Moon"
+date: "10/15/2017"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Before building the regression model, the data was loaded with the following code:
+
+```{r results='hide', message=FALSE, warning=FALSE}
+library(tidyverse)
+
+labdata <- read_tsv("labdata.txt")
+```
+
+
+### Part A
+
+
+Below is the linear model for the lab data:
+
+```{r}
+reg <- lm(y ~ x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8, labdata)
+summary(reg)
+```
+
+
+### Part B
+
+
+```{r}
+attach(labdata)
+plot(x1, y)
+#plot(x2, y)
+#plot(x3, y)
+#plot(x4, y)
+#plot(x5, y)
+#plot(x6, y)
+#plot(x7, y)
+#plot(x8, y)
+```
+
+Variable x1 can be used in a piecewise regression model as the scatter plot of x1 against y clearly shows a kink.
+
+
+### Part C
+
+```{r}
+avg = mean(x1)
+avg
+
+reg.piece <- lm(y ~ (x1<avg)*x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8, labdata)
+summary(reg.piece)
+```
+
+Above summary shows that the piecewise regression model of the lab data is indeed better because the R-squared value is signficantly greater than the original regression model.

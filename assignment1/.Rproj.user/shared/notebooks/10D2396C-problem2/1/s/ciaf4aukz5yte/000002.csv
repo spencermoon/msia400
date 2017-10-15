@@ -1,0 +1,3 @@
+"0","library(tidyverse)"
+"0","bostonhousing <- read_tsv(""bostonhousing.txt"")"
+"0","bostonhousing$CHAS <- factor(bostonhousing$CHAS)"

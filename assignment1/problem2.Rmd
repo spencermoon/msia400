@@ -1,0 +1,86 @@
+---
+title: "Lab Exercise 1 - Problem 2"
+author: "Spencer Moon"
+date: "10/15/2017"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Before building the regression model, the data was loaded and normalized with the following code:
+
+```{r results='hide', message=FALSE, warning=FALSE}
+library(tidyverse)
+
+bostonhousing <- read_tsv("bostonhousing.txt")
+bostonhousing$CHAS <- factor(bostonhousing$CHAS)
+```
+
+
+### Part A
+
+
+Below is the linear model for the Boston housing data:
+
+```{r}
+reg <- lm(MEDV ~ CRIM + ZN + INDUS + factor(CHAS) + NOX + 
+                 RM + AGE + DIS + RAD + TAX + PTRATIO + B + LSTAT, bostonhousing)
+summary(reg)
+```
+
+From the result above, we can remove variables INDUS and AGE as the *P*-values associated with these predictors are too large and indicate the coeffcients are not significant.
+
+
+### Part B
+
+
+Below is the adjusted linear model without variables INDUS and AGE:
+
+```{r}
+reg.picked <- lm(MEDV ~ CRIM + ZN + factor(CHAS) + NOX + 
+                 RM + DIS + RAD + TAX + PTRATIO + B + LSTAT, bostonhousing)
+summary(reg.picked)
+```
+
+
+### Part C
+
+
+Below is the MSE and MSA values associated with the linear models:
+
+```{r}
+n=506 
+p1=13 
+p2=11
+
+MSE1 = sum((reg$residuals)^2)/(n-1-p1) 
+MAE1 = sum(abs(reg$residuals))/(n-1-p1)
+
+MSE2 = sum((reg.picked$residuals)^2)/(n-1-p2) 
+MAE2 = sum(abs(reg.picked$residuals))/(n-1-p2)
+
+# Original regression model
+MSE1
+MAE1
+
+# Adjusted regression model
+MSE2
+MAE2
+```
+
+From the values above, ***reg.picked*** is preferred because it has slightly lower MSE and MAE. 
+
+
+### Part D
+
+
+```{r}
+step(reg)
+```
+
+Running the stepwise regression on the Boston housing dataset shows that AIC is the lowest in the model that excludes variables AGE and INDUS. This is equavalent to ***reg.picked*** in Part B, and all of the coefficients above match to those of ***reg.picked***. 
