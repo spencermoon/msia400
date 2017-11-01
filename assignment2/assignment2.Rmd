@@ -1,0 +1,173 @@
+---
+title: "Assignment 2"
+author: "Spencer Moon"
+date: "10/28/2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Data was loading using the following code:
+
+```{r results='hide', message=FALSE, warning=FALSE}
+library(tidyverse)
+
+redwine <- read.table('redwine.txt', header = TRUE, sep = "\t", na.strings = 'NA')
+```
+
+
+# Problem 1
+
+
+The averages of RS and SD without the missing values are as follows:
+
+```{r}
+rs_avg <- mean(redwine$RS, na.rm = TRUE)
+sd_avg <- mean(redwine$SD, na.rm = TRUE)
+
+# Print averages
+paste('RS average:', round(rs_avg, digits = 2))
+paste('SD average:', round(sd_avg, digits = 2))
+```
+
+
+# Problem 2
+
+
+The coefficients of a linear model between SD and FS are as follows:
+
+```{r}
+# Creat SD and FS vectors
+SD.obs <- redwine$SD[is.na(redwine$SD) == FALSE]
+FS.obs <- redwine$FS[is.na(redwine$SD) == FALSE]  
+
+# Build simple regression and print coefficients
+SDFS_fit <- lm(SD.obs ~ FS.obs)
+coefficients(SDFS_fit)
+```
+
+
+# Problem 3
+
+
+Missing values of SD were imputed using the following code:
+
+```{r}
+# Create vector of estimated SD
+FS_fill <- data.frame(FS.obs = redwine$FS[is.na(redwine$SD) == TRUE])
+SD_est <- data.frame(predict(SDFS_fit, FS_fill))
+
+# Create function for imputing missing SD values
+estimp <- function(field, est)
+{
+  missing	<- is.na(field)
+  n.missing <- sum(missing)
+  field.obs <- field[!missing]
+  imputed	<- field
+  for (i in 1:n.missing)
+  {
+    imputed[missing][i] = est[i,]
+  }
+  return(imputed)
+}
+
+# Use function and print new RS average
+redwine$SD <- estimp(redwine$SD, SD_est)
+paste('SD new average:', round(mean(redwine$SD), digits = 2))
+```
+
+
+# Problem 4
+
+
+Missing values of RS were imputed using the following code:
+
+```{r}
+# Create function for imputing missing RS values
+avgimp <- function(field, avg)
+{
+  missing	<- is.na(field)
+  n.missing <- sum(missing)
+  field.obs <- field[!missing]
+  imputed	<- field
+  imputed[missing] <- avg
+  return(imputed)
+}
+
+# Use function and print new RS average
+redwine$RS <- avgimp(redwine$RS, rs_avg)
+paste('RS new average:', round(mean(redwine$RS), digits = 2))
+```
+
+
+# Problem 5
+
+Below is the multiple linear regression model:
+
+```{r}
+winemodel <- lm(QA ~ ., redwine)
+coefficients(winemodel)
+```
+
+
+# Problem 6
+
+
+Below is the summary of the model:
+
+```{r}
+summary(winemodel)
+```
+
+Based on the summary shown above, the PH variable is least likely to be related to QA as it has the highest *p*-value compared to other variables.
+
+
+# Problem 7
+
+```{r}
+library(DAAG)
+
+validation <- CVlm(data = redwine, m = 3, form.lm = winemodel, printit = FALSE)
+```
+
+Error is 0.43.
+
+
+# Problem 8
+
+
+The average and standard deviation are shown below:
+
+```{r}
+ph_avg <- mean(redwine$PH)
+ph_std <- sd(redwine$PH)
+
+paste('PH average:', round(ph_avg, digits = 2))
+paste('PH standard deviation:', round(ph_std, digits = 2))
+```
+
+
+Below are the dimensions of *redwine* and *redwine2* as well as the number of rows removed:
+
+```{r}
+redwine2 <- subset(redwine , PH < ph_avg + 3*ph_std & PH > ph_avg - 3*ph_std)
+dim(redwine)
+dim(redwine2)
+paste("Number of rows removed:", dim(redwine)[1] - dim(redwine2)[1])
+```
+
+
+# Problem 9 
+
+
+Below is the new model:
+
+```{r}
+winemodel2 <- lm(QA ~ ., redwine2)
+summary(winemodel2)
+```
+
+The new model is worse. Even though we have a very small increase in R squared, we have less significant coefficients. Based on having the smallest *p*-values, variables VA, CH, SD, SU, and AL are most likely to be related to QA.
