@@ -1,0 +1,175 @@
+---
+title: "Assignment 3"
+author: "Spencer Moon"
+date: "11/13/2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Problem 1
+
+The data was loaded using the following code: 
+
+```{r results='hide', message=FALSE, warning=FALSE}
+# Load necessary libraries for this exercise
+library(expm)
+
+# Import data
+markov <- read.table('markov100.txt')
+markov <- as.matrix(markov)
+```
+
+
+### Part A
+
+```{r}
+# Create state vector with first element as 1 (currently at State 1)
+a <- c(rep(0, dim(markov)[1]))
+a[1] <- 1
+
+# Find probability of being in State 5 after 10 transitions
+trans <- 10
+result <- a %*% (markov %^% trans)
+result[5]
+```
+
+The probability of being in State 5 after 10 transitions from State 1 is 4.5%.
+
+
+### Part B
+
+```{r}
+# Create state vector with first element as 1 (currently at State 1)
+a <- c(rep(0, dim(markov)[1]))
+prob <- 1/3
+a[c(1,2,3)] <- prob
+
+# Find probability of being in State 5 after 10 transitions
+trans <- 10
+result <- a %*% (markov %^% trans)
+result[10]
+```
+
+The probability of being in State 10 after 10 transitions from State 1, 2, or 3 with equal probability is 8.3%.
+
+
+### Part C
+
+```{r}
+# Replace the last row of (P transpose - I) by a vector of ones
+Q <- t(markov) - diag(dim(markov)[1])
+Q[dim(markov)[1],] <- c(rep(1, dim(markov)[1]))
+
+# Solve for pi
+rhs <- c(rep(0, dim(markov)[1]))
+rhs[dim(markov)[1]] <- 1
+Pi <- solve(Q) %*% rhs
+Pi[1]
+```
+
+The steady state probability of State 1 is 1.3%.
+
+
+### Part D
+
+```{r}
+B <- markov[-100, -100]
+Q <- diag(dim(markov)[1] - 1) - B
+e = c(rep(1, dim(markov)[1] - 1))
+m = solve(Q) %*% e
+m[1]
+```
+
+The mean first passage time from State 1 to State 100 is 254.94.
+
+
+# Problem 2
+
+The data was loaded using the following code:
+
+```{r}
+web <- read.table('webtraffic.txt', header = TRUE)
+```
+
+
+### Part A
+
+```{r}
+# Create vector of column sums
+Traffic <- as.vector(colSums(web))
+
+# Create 9 by 9 matrix from vector
+Traffic <- matrix(Traffic, nrow = 9, ncol = 9, byrow = TRUE)
+Traffic
+```
+
+
+### Part B
+
+```{r}
+# Change one matrix element
+Traffic[9,1] = 1000
+P <- Traffic/rowSums(Traffic)
+P
+```
+
+
+### Part C
+
+```{r}
+# Replace the last row of (P transpose - I) by a vector of ones
+Q <- t(P) - diag(dim(P)[1])
+Q[dim(P)[1],] <- c(rep(1, dim(P)[1]))
+
+# Solve for pi
+rhs <- c(rep(0, dim(P)[1]))
+rhs[dim(P)[1]] <- 1
+Pi <- solve(Q) %*% rhs
+Pi
+```
+
+
+### Part D
+
+```{r warning = FALSE}
+# Create average time vector
+time <- c(0.1, 2, 3, 5, 5, 3, 3, 2, 0)
+
+# Calculate average time
+sum(Pi * time)
+```
+
+The average time sepnt on the website is 2.3 minutes.
+
+
+### Part E
+
+```{r}
+# Adjust for additional links
+Traffic[2,6] <- .3 * Traffic[2,3]
+Traffic[2,3] <- .7 * Traffic[2,3]
+Traffic[2,7] <- .2 * Traffic[2,4]
+Traffic[2,4] <- .8 * Traffic[2,4]
+
+# Recalculate probability matrix
+P <- Traffic/rowSums(Traffic)
+
+# Replace the last row of (P transpose - I) by a vector of ones
+Q <- t(P) - diag(dim(P)[1])
+Q[dim(P)[1],] <- c(rep(1, dim(P)[1]))
+
+# Solve for pi
+rhs <- c(rep(0, dim(P)[1]))
+rhs[dim(P)[1]] <- 1
+Pi2 <- solve(Q) %*% rhs
+
+# Check variance differences of Pi and Pi2
+var(Pi)
+var(Pi2)
+```
+
+The variance for Pi2 is slightly lower, which indicates that the traffic has become more balanced with the new links.
